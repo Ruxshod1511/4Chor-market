@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "site": "market-4chor",
+    "public": ".next/standalone",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/server.js"
+      }
+    ]
+  }
+} 
