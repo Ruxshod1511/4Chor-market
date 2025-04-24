@@ -77,28 +77,150 @@ export default function OrderViewClient() {
       if (snapshot.exists()) {
         const productsData: Product[] = [];
         snapshot.forEach((childSnapshot) => {
+          const data = childSnapshot.val();
           productsData.push({
             id: childSnapshot.key as string,
-            ...childSnapshot.val()
+            name: data.name || '',
+            price: data.price || 0,
+            image: data.image || '',
+            description: data.description || ''
           });
         });
         setProducts(productsData);
+      } else {
+        setProducts([]);
       }
+    }, (error) => {
+      console.error('Error fetching products:', error);
+      toast.error('Mahsulotlarni yuklashda xatolik yuz berdi');
+      setProducts([]);
     });
 
     return () => unsubscribe();
   }, []);
 
   const handlePrint = () => {
-    const printContent = document.getElementById('contentRef');
-    const originalContents = document.body.innerHTML;
-    
-    document.body.innerHTML = printContent?.innerHTML || '';
-    
-    window.print();
-    
-    document.body.innerHTML = originalContents;
-    window.location.reload();
+    if (!contentRef.current) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Print window could not be opened');
+      return;
+    }
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Buyurtma #${order?.orderNumber}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+              color: #111827;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            th, td {
+              border: 1px solid #E5E7EB;
+              padding: 8px;
+              text-align: left;
+            }
+            th {
+              background-color: #F9FAFB;
+              font-weight: bold;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              padding-bottom: 20px;
+              border-bottom: 1px solid #E5E7EB;
+            }
+            .customer-info {
+              margin-bottom: 30px;
+            }
+            .footer {
+              margin-top: 40px;
+              text-align: center;
+              color: #4B5563;
+              font-size: 14px;
+              padding-top: 20px;
+              border-top: 1px solid #E5E7EB;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Buyurtma #${order?.orderNumber}</h1>
+            <p>${new Date().toLocaleDateString('uz-UZ', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</p>
+          </div>
+
+          <div class="customer-info">
+            <h2>Mijoz ma'lumotlari</h2>
+            <p><strong>Ism:</strong> ${order?.customerInfo.name}</p>
+            <p><strong>Telefon:</strong> ${order?.customerInfo.phone}</p>
+            ${order?.customerInfo.comment ? `<p><strong>Izoh:</strong> ${order.customerInfo.comment}</p>` : ''}
+          </div>
+
+          <h2>Buyurtma tarkibi</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Mahsulot</th>
+                <th>Narxi</th>
+                <th>Soni</th>
+                <th>Jami</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order?.items.map((item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${item.name}</td>
+                  <td>${item.price.toLocaleString()} so'm</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.totalItemPrice.toLocaleString()} so'm</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" style="text-align: right;"><strong>Jami summa:</strong></td>
+                <td><strong>${order?.totalPrice.toLocaleString()} so'm</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="footer">
+            <p>Bu hujjat kompyuter tomonidan yaratilgan va imzo talab qilinmaydi</p>
+            <p>Savol va murojatlar uchun: +998 91 296 11 11</p>
+            <p>sotib olingan mahsulotlar olinmaydi</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // Wait for images and resources to load
+    printWindow.onload = () => {
+      printWindow.print();
+      // Close the print window after printing
+      printWindow.onafterprint = () => {
+        printWindow.close();
+      };
+    };
   };
 
   const handleDownloadPDF = async () => {
@@ -225,7 +347,7 @@ export default function OrderViewClient() {
           <div className="p-4">
             {products.length === 0 ? (
               <div className="text-center text-gray-500 py-4">
-                Mahsulotlar yuklanmoqda...
+                Mahsulotlar topilmadi
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -241,7 +363,7 @@ export default function OrderViewClient() {
                     <div className="relative">
                       <div className="w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
                         <img
-                          src={product.image}
+                          src={product.image || '/placeholder.png'}
                           alt={product.name}
                           className="w-full h-full object-cover transition-opacity duration-300"
                           loading="lazy"

@@ -472,7 +472,7 @@ const HomePage: React.FC = () => {
                       <div className="w-full h-40 bg-gray-200 rounded-lg overflow-hidden cursor-pointer"
                            onClick={() => setSelectedImage(product.image)}>
                         <img
-                          src={product.image}
+                          src={product.image || '/placeholder.png'}
                           alt={product.name}
                           className="w-full h-full object-cover transition-opacity duration-300"
                           loading="lazy"
@@ -629,7 +629,7 @@ const HomePage: React.FC = () => {
                 >
                   <div className="flex items-center w-full sm:w-auto mb-3 sm:mb-0">
                     <img
-                      src={item.image}
+                      src={item.image || '/placeholder.png'}
                       alt={item.name}
                       className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md"
                       loading="lazy"
