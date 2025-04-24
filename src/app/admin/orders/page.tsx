@@ -50,7 +50,6 @@ const OrdersPage = () => {
   };
 
   useEffect(() => {
-    // Realtime database reference
     const ordersRef = ref(database, 'orders');
 
     const unsubscribe = onValue(ordersRef, (snapshot) => {
@@ -64,7 +63,6 @@ const OrdersPage = () => {
           ordersData.push(order);
         });
 
-        // Sort orders by creation date (newest first)
         ordersData.sort((a, b) => {
           const dateA = a.createdAt || 0;
           const dateB = b.createdAt || 0;
@@ -99,10 +97,8 @@ const OrdersPage = () => {
         const orderData = orderSnapshot.val();
         
         if (orderData && orderData.items) {
-          // Har bir mahsulot uchun
           for (const item of orderData.items) {
             try {
-              // Firestore'dan mahsulotni topish
               const productsSnapshot = await getDocs(collection(db, 'products'));
               const product = productsSnapshot.docs.find(doc => doc.data().name === item.name);
               

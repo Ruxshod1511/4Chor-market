@@ -19,7 +19,6 @@ const navItems = [
   { href: "/admin/categories", label: "Categories", icon: <FaList /> },
   { href: "/admin/products", label: "Products", icon: <FaBox /> },
   { href: "/admin/orders", label: "Orders", icon: <FaShoppingCart /> },
-  { href: "/admin/users", label: "Users", icon: <FaUsers /> },
   { href: "/", label: "Home", icon: <FaHome /> },
 ];
 

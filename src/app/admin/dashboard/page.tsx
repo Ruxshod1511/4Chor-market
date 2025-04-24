@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { FaList, FaBox, FaUsers, FaShoppingCart } from "react-icons/fa";
-import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/Firebase.config";
+import { collection, onSnapshot, doc, getDoc, updateDoc, getDocs } from 'firebase/firestore';
+import { unsubscribe } from "diagnostics_channel";
+
 
 type CardData = {
   title: string;
@@ -15,6 +17,8 @@ const DashboardPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [categoryCount, setCategoryCount] = useState<number>(0);
   const [productCount, setProductCount] = useState<number>(0);
+  const [orderCount, setOrderCount] = useState<number>(0);
+  const [userCount, setUserCount] = useState<number>(0); // Added state for user count
 
   const cardData: CardData[] = [
     {
@@ -24,7 +28,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: "Total Order",
-      count: "6X",
+      count: `2X`,
       icon: <FaShoppingCart size={26} className="text-green-500" />,
     },
     {
@@ -34,7 +38,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: "Total User",
-      count: "6X",
+      count: `${userCount}X`, 
       icon: <FaUsers size={26} className="text-red-500" />,
     },
   ];
@@ -49,9 +53,22 @@ const DashboardPage: React.FC = () => {
     setProductCount(querySnapshot.size);
   };
 
+  const fetchOrderCount = async (): Promise<void> => {
+   
+
+   
+  };
+
+  const fetchUserCount = async (): Promise<void> => {
+    const querySnapshot = await getDocs(collection(db, "users"));
+    setUserCount(querySnapshot.size);
+  };
+
   useEffect(() => {
     fetchCategoryCount();
     fetchProductCount();
+    fetchOrderCount();
+    fetchUserCount(); 
   }, []);
 
   const toggleModal = () => {

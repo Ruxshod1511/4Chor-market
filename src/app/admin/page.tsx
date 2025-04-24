@@ -1,30 +1,14 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React from 'react';
 
-const AdminPage = () => {
-  const { user } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    const adminEmail = "ruxshodinte@gmail.com";
-    if (user?.primaryEmailAddress?.emailAddress === adminEmail) {
-      router.push("/admin")
-    }
-    else{
-      router.push("/")
-    }
-    
-   
-  }, [user, router]);
-
+export default function AdminPage() {
   return (
-    <div className="min-h-screen bg-gray-900 p-6 flex items-center justify-center">
-      <h1 className="text-5xl text-white">Hi admin 👋</h1>
+    <div className="min-h-screen p-4 bg-gray-900">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold text-white mb-4">Admin Dashboard</h1>
+        {/* Add your admin content here */}
+      </div>
     </div>
   );
-};
-
-export default AdminPage;
+}

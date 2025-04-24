@@ -413,6 +413,7 @@ export default function OrderViewClient() {
             <div className="print:mt-8 print:pt-8 print:border-t print:border-[#E5E7EB] print:text-center print:text-[#4B5563]">
               <p className="print:text-sm">Bu hujjat kompyuter tomonidan yaratilgan va imzo talab qilinmaydi</p>
               <p className="print:text-sm print:mt-1">Savol va murojatlar uchun: +998 91 296 11 11</p>
+              <p className="print:text-sm print:mt-1">sotib olingan mahsulotlar olinmaydi</p>
             </div>
           </div>
         </div>
