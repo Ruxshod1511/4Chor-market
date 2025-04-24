@@ -9,9 +9,9 @@ export async function GET() {
     let hasMore = true;
 
     while (hasMore) {
-      const users = await clerkClient.users.getUserList({ limit, offset });
-      allUsers.push(...users);
-      if (users.length < limit) hasMore = false;
+      const response = await clerkClient.users.getUserList({ limit, offset });
+      allUsers.push(...response.data);
+      if (response.data.length < limit) hasMore = false;
       else offset += limit;
     }
 
