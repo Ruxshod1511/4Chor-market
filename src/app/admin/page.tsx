@@ -1,33 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function AdminPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    // Check if already authenticated
-    const token = Cookies.get('admin_token');
+    const token = Cookies.get("admin_token");
     if (token) {
-      router.push('/admin/dashboard');
+      router.push("/admin/dashboard");
     }
   }, [router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'ruxshodinte@gmail.com' && password === 'ruxshod2727') {
-      // Set authentication cookie
-      Cookies.set('admin_token', 'authenticated', { expires: 7 }); // Expires in 7 days
-      router.push('/admin/dashboard');
+    if (email === "ruxshodinte@gmail.com" && password === "ruxshod2727") {
+      Cookies.set("admin_token", "authenticated", { expires: 7 });
+      router.push("/admin/dashboard");
     } else {
-      router.push('/');
+      router.push("/");
       setTimeout(() => {
-        setError('');
+        setError("");
       }, 3000);
     }
   };
@@ -38,7 +36,9 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Login</h1>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
             <input
               type="email"
               value={email}
@@ -48,7 +48,9 @@ export default function AdminPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Parol</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Parol
+            </label>
             <input
               type="password"
               value={password}

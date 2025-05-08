@@ -16,14 +16,13 @@ const firebaseConfig = {
 
 let app;
 
-// Check if Firebase apps have already been initialized
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
   if (typeof window !== "undefined") {
-    getAnalytics(app); // Optional, only run analytics in the browser
+    getAnalytics(app);
   }
 } else {
-  app = getApp(); // Use the already initialized app
+  app = getApp();
 }
 
 export const db = getFirestore(app);

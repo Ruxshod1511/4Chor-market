@@ -7,9 +7,12 @@ import { FiShoppingCart, FiHeart, FiTrash2, FiArrowLeft } from "react-icons/fi";
 import { MdSearch } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import SendOrder from './components/sendOrder';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import SendOrder from "./components/sendOrder";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Exit } from "./exitModal/page";
+import { Carousel1 } from "./components/carusel";
+import logo from "./ilb/4chor.png";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -154,7 +157,6 @@ const HomePage: React.FC = () => {
   }, []);
 
   const navigateToOrderPage = useCallback(() => {
-    // Convert cart object to CartItem array
     const selectedProducts = Object.entries(cart)
       .map(([id, quantity]) => {
         const product = products.find((p) => p.id === id);
@@ -411,8 +413,10 @@ const HomePage: React.FC = () => {
     <>
       <section
         aria-label="Product categories"
-        className="container mx-auto px-4 mt-6"
+        className="container mx-auto px-4"
       >
+        <Exit />
+        <Carousel1 />
         <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
           <button
             onClick={() => setSelectedCategory(null)}
@@ -455,7 +459,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
             {loading
               ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                   <SkeletonCard key={`skeleton-${i}`} />
@@ -466,13 +470,15 @@ const HomePage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3 }}
-                    className="bg-white rounded-xl shadow-md p-3 group relative flex flex-col transition-all hover:shadow-lg"
+                    className="bg-white rounded-xl shadow-md p-2 group relative flex flex-col transition-all hover:shadow-lg"
                   >
                     <div className="relative">
-                      <div className="w-full h-40 bg-gray-200 rounded-lg overflow-hidden cursor-pointer"
-                           onClick={() => setSelectedImage(product.image)}>
+                      <div
+                        className="w-full h-40 bg-gray-200 rounded-lg overflow-hidden cursor-pointer"
+                        onClick={() => setSelectedImage(product.image)}
+                      >
                         <img
-                          src={product.image || '/placeholder.png'}
+                          src={product.image || "/placeholder.png"}
                           alt={product.name}
                           className="w-full h-full object-cover transition-opacity duration-300"
                           loading="lazy"
@@ -510,59 +516,22 @@ const HomePage: React.FC = () => {
                       <span className="text-lg font-semibold text-blue-600">
                         {product.price.toLocaleString()} сум
                       </span>
-                      <div className="relative">
-                        <motion.button
-                          onClick={() => handleAddToCart(product.id)}
-                          className="p-2 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 "
-                          whileTap={{ scale: 1.1 }}
-                          aria-label={`Add ${product.name} to cart`}
-                        >
-                          <FiShoppingCart className="text-blue-600 -right-10" />
-                        </motion.button>
+
+                      <motion.button
+                        onClick={() => handleAddToCart(product.id)}
+                        whileTap={{ scale: 1.05 }}
+                        className="relative bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-full shadow-md transition duration-200"
+                        aria-label={`Add ${product.name} to cart`}
+                      >
+                        <FiShoppingCart className="text-2xl" />
+
+                        {/* Qizilcha badge */}
                         {cart[product.id] > 0 && (
-                          <div className="flex items-center gap-1 absolute -top-6 -right-2  ">
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveFromCart(product.id);
-                              }}
-                              className="bg-red-500 text-white text-xs rounded-l-full px-2.5 text-center py-0.5 hover:bg-red-600 cursor-pointer"
-                              role="button"
-                              tabIndex={0}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.stopPropagation();
-                                  handleRemoveFromCart(product.id);
-                                }
-                              }}
-                              aria-label={`Remove ${product.name} from cart`}
-                            >
-                              -
-                            </div>
-                            <div className="bg-blue-500 text-white text-xs  px-1.5 py-0.5">
-                              {cart[product.id]}
-                            </div>
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddToCart(product.id);
-                              }}
-                              className="bg-green-500 text-white text-xs rounded-r-full px-2.5 text-center py-0.5 hover:bg-green-600 cursor-pointer"
-                              role="button"
-                              tabIndex={0}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.stopPropagation();
-                                  handleAddToCart(product.id);
-                                }
-                              }}
-                              aria-label={`Add another ${product.name} to cart`}
-                            >
-                              +
-                            </div>
-                          </div>
+                          <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full shadow">
+                            {cart[product.id]}
+                          </span>
                         )}
-                      </div>
+                      </motion.button>
                     </div>
                   </motion.article>
                 ))}
@@ -629,7 +598,7 @@ const HomePage: React.FC = () => {
                 >
                   <div className="flex items-center w-full sm:w-auto mb-3 sm:mb-0">
                     <img
-                      src={item.image || '/placeholder.png'}
+                      src={item.image || "/placeholder.png"}
                       alt={item.name}
                       className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md"
                       loading="lazy"
@@ -732,20 +701,28 @@ const HomePage: React.FC = () => {
           </div>
         )}
 
-        <header className="bg-white shadow sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-4">
+        <header className="bg-gradient-to-r from-blue-500 to-blue-700 shadow-lg sticky top-0 z-40">
+          <div className="container mx-auto px-4 py-3 mb-5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex w-full sm:w-auto justify-between items-center">
-                <h1 className="text-2xl font-bold text-blue-600 tracking-tight">
-                  4Chor
-                </h1>
+                <div className="flex items-center align-item-center mt-2">
+                  <img
+                    style={{
+                      width: "110px",
+                      height: "50px",
+                      objectFit: "cover",
+                    }}
+                    src={logo.src}
+                    alt="logo"
+                  />
+                </div>
                 <button
                   onClick={() => setActiveTab("order")}
                   className="relative flex items-center sm:hidden"
                   aria-label="Cart"
                 >
                   <div className="relative">
-                    <FiShoppingCart size={24} className="text-blue-600" />
+                    <FiShoppingCart size={24} className="text-white" />
                     {Object.keys(cart).length > 0 && (
                       <span
                         className="absolute -top-1 -right-3 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full"
@@ -767,7 +744,7 @@ const HomePage: React.FC = () => {
                   id="search-input"
                   type="text"
                   placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:ring-2 outline-none text-gray-900 placeholder-gray-500"
+                  className="w-full pl-10 pr-4 bg-amber-50 py-2 rounded-full border border-gray-300 focus:ring-2 outline-none text-gray-900 placeholder-gray-500"
                   onChange={handleSearchChange}
                   onFocus={() => setSearchResultsOpen(true)}
                   onKeyDown={handleSearchSubmit}
@@ -857,7 +834,7 @@ const HomePage: React.FC = () => {
                 style={{ minWidth: "120px" }}
               >
                 <div className="relative">
-                  <FiShoppingCart size={30} className="text-blue-600" />
+                  <FiShoppingCart size={30} className="text-white" />
                   {Object.keys(cart).length > 0 && (
                     <span
                       className="absolute -top-1 -right-3 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full"
@@ -868,7 +845,7 @@ const HomePage: React.FC = () => {
                   )}
                 </div>
                 {totalPrice > 0 && (
-                  <span className="text-sm font-semibold text-gray-700 ml-2 whitespace-nowrap">
+                  <span className="text-sm font-semibold text-white ml-2 whitespace-nowrap">
                     {totalPrice.toLocaleString()} сум
                   </span>
                 )}
