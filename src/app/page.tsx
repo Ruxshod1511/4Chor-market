@@ -418,7 +418,7 @@ const HomePage: React.FC = () => {
       >
         <Exit />
 
-        <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
+        <div className="flex gap-3 overflow-x-auto pb-2 md:mt-3 scroll-smooth">
           <button
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
@@ -451,12 +451,12 @@ const HomePage: React.FC = () => {
         {filteredProducts.length === 0 && !loading ? (
           <div className="text-center py-10">
             <h2 className="text-xl font-semibold text-gray-700">
-              No products found
+              Maxsulot topilmadi
             </h2>
             <p className="text-gray-500 mt-2">
               {search
-                ? "Try a different search term"
-                : "No products available in this category"}
+                ? "Boshqa qidiruv soʻzini sinab koʻring"
+                : "Ushbu turkumda mahsulotlar mavjud emas"}
             </p>
           </div>
         ) : (
@@ -576,16 +576,18 @@ const HomePage: React.FC = () => {
           >
             <FiArrowLeft size={24} />
           </button>
-          <h1 className="text-2xl font-bold text-gray-800">Your Cart</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Sizning savatingiz
+          </h1>
         </div>
 
         {selectedProducts.length === 0 ? (
           <div className="text-center py-10">
             <h2 className="text-xl font-semibold text-gray-700">
-              Your cart is empty
+              Savatingiz boʻsh
             </h2>
             <p className="text-gray-500 mt-2">
-              Add some products to your cart first
+              Avval savatga ba'zi mahsulotlarni qo'shing
             </p>
           </div>
         ) : (
@@ -612,7 +614,7 @@ const HomePage: React.FC = () => {
                         {item.name}
                       </h2>
                       <p className="text-xs sm:text-sm text-gray-500">
-                        {item.price.toLocaleString()} сум
+                        {item.price.toLocaleString()} sum
                       </p>
                     </div>
                   </div>
@@ -657,7 +659,7 @@ const HomePage: React.FC = () => {
                   Total:
                 </span>
                 <span className="text-xl font-bold text-blue-600">
-                  {totalPrice.toLocaleString()} сум
+                  {totalPrice.toLocaleString()} sum
                 </span>
               </div>
               <button
@@ -665,7 +667,7 @@ const HomePage: React.FC = () => {
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
                 disabled={selectedProducts.length === 0}
               >
-                Proceed to Checkout
+                Rasmiylashtirishga o'tish
               </button>
             </div>
 
@@ -741,13 +743,13 @@ const HomePage: React.FC = () => {
 
               <div ref={searchRef} className="relative w-full sm:w-96">
                 <label htmlFor="search-input" className="sr-only">
-                  Search products
+                  Mahsulot qidirish
                 </label>
                 <MdSearch className="absolute top-3 left-3 text-gray-400 text-xl" />
                 <input
                   id="search-input"
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Mahsulot qidirish..."
                   className="w-full pl-10 pr-4 bg-amber-50 py-2 rounded-full border border-gray-300 focus:ring-2 outline-none text-gray-900 placeholder-gray-500"
                   onChange={handleSearchChange}
                   onFocus={() => setSearchResultsOpen(true)}
@@ -782,7 +784,7 @@ const HomePage: React.FC = () => {
                       ))
                     ) : (
                       <div className="px-4 py-2 text-sm text-gray-500">
-                        No results found
+                        natija topilmadi
                       </div>
                     )}
 
@@ -790,13 +792,13 @@ const HomePage: React.FC = () => {
                       <div className="border-t mt-2 pt-2">
                         <div className="px-4 flex justify-between items-center mb-1">
                           <h4 className="text-xs font-bold text-gray-600">
-                            Search History
+                            Qidiruv tarixi
                           </h4>
                           <button
                             onClick={handleClearSearchHistory}
                             className="text-xs text-blue-600 hover:text-blue-800"
                           >
-                            Clear all
+                            Hammasini tozalash
                           </button>
                         </div>
                         {searchHistory.map((item, index) => (
@@ -850,7 +852,7 @@ const HomePage: React.FC = () => {
                 </div>
                 {totalPrice > 0 && (
                   <span className="text-sm font-semibold text-white ml-2 whitespace-nowrap">
-                    {totalPrice.toLocaleString()} сум
+                    {totalPrice.toLocaleString()} sum
                   </span>
                 )}
               </button>
