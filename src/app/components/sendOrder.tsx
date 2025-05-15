@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
-import { toast } from 'react-toastify';
-import { FiPhone, FiUser, FiMessageSquare } from 'react-icons/fi';
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+import { FiPhone, FiUser, FiMessageSquare } from "react-icons/fi";
 
 interface SendOrderProps {
   cartItems: {
@@ -16,11 +16,16 @@ interface SendOrderProps {
   onSubmit: () => void;
 }
 
-const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, onSubmit }) => {
+const SendOrder: React.FC<SendOrderProps> = ({
+  cartItems,
+  totalPrice,
+  onClose,
+  onSubmit,
+}) => {
   const [formData, setFormData] = useState({
-    phone: '',
-    name: '',
-    comment: ''
+    phone: "",
+    name: "",
+    comment: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -29,45 +34,49 @@ const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, o
     setLoading(true);
 
     if (!formData.phone || !formData.name) {
-      toast.error('Telefon va ism majburiy!');
+      toast.error("Telefon va ism majburiy!");
       setLoading(false);
       return;
     }
 
     try {
       const orderData = {
-        items: cartItems.map(item => ({
+        items: cartItems.map((item) => ({
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          totalItemPrice: item.price * item.quantity
+          totalItemPrice: item.price * item.quantity,
         })),
         totalPrice,
         customerInfo: {
           ...formData,
-          phone: formData.phone.startsWith('+') ? formData.phone : `+${formData.phone}`
+          phone: formData.phone.startsWith("+")
+            ? formData.phone
+            : `+${formData.phone}`,
         },
         orderDate: new Date().toISOString(),
-        status: 'new'
+        status: "new",
       };
 
-      const response = await fetch('/api/orders', {
-        method: 'POST',
+      const response = await fetch("/api/orders", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(orderData),
       });
 
       if (!response.ok) {
-        throw new Error('Buyurtma yuborishda xatolik');
+        throw new Error("Buyurtma yuborishda xatolik");
       }
 
-      toast.success('Buyurtmangiz muvaffaqiyatli yuborildi!');
+      toast.success(
+        "Buyurtmangiz muvaffaqiyatli yuborildi! Tez orada siz bilan bog'lanamiz."
+      );
       onSubmit();
     } catch (err) {
-      toast.error('Xatolik yuz berdi. Qaytadan urinib ko\'ring');
-      console.error('Order submission error:', err);
+      toast.error("Xatolik yuz berdi. Qaytadan urinib ko'ring");
+      console.error("Order submission error:", err);
     } finally {
       setLoading(false);
     }
@@ -75,12 +84,14 @@ const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, o
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full  transform transition-all">
         <div className="border-b pb-3 mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Buyurtma berish</h2>
-          <p className="text-gray-500 text-sm mt-1">Iltimos, ma'lumotlarni to'ldiring</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Iltimos, ma'lumotlarni to'ldiring
+          </p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
@@ -90,7 +101,9 @@ const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, o
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, phone: e.target.value }))
+              }
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-black"
               placeholder="+998 90 123 45 67"
               required
@@ -105,7 +118,9 @@ const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, o
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              }
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-black"
               placeholder="To'liq ismingiz"
               required
@@ -119,7 +134,9 @@ const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, o
             </label>
             <textarea
               value={formData.comment}
-              onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, comment: e.target.value }))
+              }
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-black"
               placeholder="Manzil yoki qo'shimcha ma'lumotlar"
               rows={3}
@@ -149,14 +166,30 @@ const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, o
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Yuborilmoqda...
                   </span>
                 ) : (
-                  'Buyurtma berish'
+                  "Buyurtma berish"
                 )}
               </button>
             </div>
@@ -167,4 +200,4 @@ const SendOrder: React.FC<SendOrderProps> = ({ cartItems, totalPrice, onClose, o
   );
 };
 
-export default SendOrder; 
+export default SendOrder;

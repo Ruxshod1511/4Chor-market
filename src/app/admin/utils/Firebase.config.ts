@@ -2,6 +2,8 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+// Web uchun Firestore’da keshlash
+import { enableIndexedDbPersistence } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyATYQw3MJJLTM3oBcFmakbuuOwGQU3MRRw",
@@ -26,4 +28,5 @@ if (!getApps().length) {
 }
 
 export const db = getFirestore(app);
+enableIndexedDbPersistence(db);
 export const database = getDatabase(app);

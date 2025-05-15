@@ -411,12 +411,13 @@ const HomePage: React.FC = () => {
 
   const renderProductsTab = () => (
     <>
+      <Carousel1 />
       <section
         aria-label="Product categories"
         className="container mx-auto px-4"
       >
         <Exit />
-        <Carousel1 />
+
         <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
           <button
             onClick={() => setSelectedCategory(null)}
@@ -509,9 +510,13 @@ const HomePage: React.FC = () => {
                     <h3 className="text-base font-semibold text-gray-900 line-clamp-1">
                       {product.name}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
+                    <p
+                      className="text-sm text-gray-600 line-clamp-2 cursor-pointer active:underline"
+                      onClick={() => router.push(`/info/${product.id}`)}
+                    >
                       {product.description}
                     </p>
+
                     <div className="flex justify-between items-center mt-4">
                       <span className="text-lg font-semibold text-blue-600">
                         {product.price.toLocaleString()} сум
@@ -525,7 +530,6 @@ const HomePage: React.FC = () => {
                       >
                         <FiShoppingCart className="text-2xl" />
 
-                        {/* Qizilcha badge */}
                         {cart[product.id] > 0 && (
                           <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full shadow">
                             {cart[product.id]}

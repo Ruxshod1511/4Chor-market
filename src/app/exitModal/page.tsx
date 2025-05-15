@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 export function Exit() {
   const [showModal, setShowModal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -20,13 +19,9 @@ export function Exit() {
     const handlePopState = () => {
       if (!confirmed) {
         setShowModal(true);
-        window.history.pushState(null, "", window.location.href); 
+        window.history.pushState(null, "", window.location.href);
       }
     };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("popstate", handlePopState);
-    window.history.pushState(null, "", window.location.href); 
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
