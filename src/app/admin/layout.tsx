@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   FaHome,
   FaList,
@@ -19,6 +18,7 @@ const navItems = [
   { href: "/admin/categories", label: "Categories", icon: <FaList /> },
   { href: "/admin/products", label: "Products", icon: <FaBox /> },
   { href: "/admin/orders", label: "Orders", icon: <FaShoppingCart /> },
+  { href: "/admin/upload", label: "Upload", icon: <FaShoppingCart /> },
   { href: "/", label: "Home", icon: <FaHome /> },
 ];
 
@@ -67,6 +67,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 {navItems.map((item) => (
                   <li key={item.href}>
                     <Link
+                      prefetch
                       href={item.href}
                       className="flex items-center py-3 px-4 mb-2 text-base font-medium rounded-lg hover:bg-blue-600 transition-all"
                       onClick={toggleMobileMenu}

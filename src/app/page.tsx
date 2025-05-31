@@ -454,6 +454,7 @@ const HomePage: React.FC = () => {
               Maxsulot topilmadi
             </h2>
             <p className="text-gray-500 mt-2">
+              1
               {search
                 ? "Boshqa qidiruv soʻzini sinab koʻring"
                 : "Ushbu turkumda mahsulotlar mavjud emas"}

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { ref, onValue, update } from 'firebase/database';
-import { database } from '@/app/admin/utils/Firebase.config';
-import { toast } from 'react-toastify';
-import { FiPrinter, FiTrash2, FiPlus, FiX, FiDownload } from 'react-icons/fi';
-import 'react-toastify/dist/ReactToastify.css';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { ref, onValue, update } from "firebase/database";
+import { database } from "@/app/admin/utils/Firebase.config";
+import { toast } from "react-toastify";
+import { FiPrinter, FiTrash2, FiPlus, FiX } from "react-icons/fi";
+import "react-toastify/dist/ReactToastify.css";
+import { motion } from "framer-motion";
 
 interface Product {
   id: string;
@@ -32,69 +32,81 @@ interface Order {
     comment?: string;
   };
   items: OrderItem[];
+  mapLocation: {
+    lat: number | string;
+    lng: number | string;
+  };
   totalPrice: number;
-  status: 'new' | 'processing' | 'completed' | 'cancelled';
+  status: "new" | "processing" | "completed" | "cancelled";
   orderNumber: number;
   createdAt: any;
 }
 
 export default function OrderViewClient() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get('id');
+  const orderId = searchParams.get("id");
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProductModal, setShowProductModal] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [newItem, setNewItem] = useState({
-    name: '',
+    name: "",
     quantity: 1,
-    price: 0
+    price: 0,
   });
 
   useEffect(() => {
     if (!orderId) return;
 
     const orderRef = ref(database, `orders/${orderId}`);
-    const unsubscribe = onValue(orderRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const orderData = snapshot.val();
-        setOrder({ id: orderId, ...orderData });
+    const unsubscribe = onValue(
+      orderRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const orderData = snapshot.val();
+          setOrder({ id: orderId, ...orderData });
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching order:", error);
+        toast.error("Buyurtmani yuklashda xatolik yuz berdi");
+        setLoading(false);
       }
-      setLoading(false);
-    }, (error) => {
-      console.error('Error fetching order:', error);
-      toast.error('Buyurtmani yuklashda xatolik yuz berdi');
-      setLoading(false);
-    });
+    );
 
     return () => unsubscribe();
   }, [orderId]);
 
   useEffect(() => {
-    const productsRef = ref(database, 'products');
-    const unsubscribe = onValue(productsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const productsData: Product[] = [];
-        snapshot.forEach((childSnapshot) => {
-          const data = childSnapshot.val();
-          productsData.push({
-            id: childSnapshot.key as string,
-            name: data.name || '',
-            price: data.price || 0,
-            image: data.image || '',
-            description: data.description || ''
+    const productsRef = ref(database, "products");
+    const unsubscribe = onValue(
+      productsRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const productsData: Product[] = [];
+          snapshot.forEach((childSnapshot) => {
+            const data = childSnapshot.val();
+            productsData.push({
+              id: childSnapshot.key as string,
+              name: data.name || "",
+              price: data.price || 0,
+              image: data.image || "",
+              description: data.description || "",
+            });
           });
-        });
-        setProducts(productsData);
-      } else {
+          setProducts(productsData);
+        } else {
+          setProducts([]);
+        }
+      },
+      (error) => {
+        console.error("Error fetching products:", error);
+        toast.error("Mahsulotlarni yuklashda xatolik yuz berdi");
         setProducts([]);
       }
-    }, (error) => {
-      console.error('Error fetching products:', error);
-      toast.error('Mahsulotlarni yuklashda xatolik yuz berdi');
-      setProducts([]);
-    });
+    );
 
     return () => unsubscribe();
   }, []);
@@ -102,9 +114,13 @@ export default function OrderViewClient() {
   const handlePrint = () => {
     if (!contentRef.current) return;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open(
+      "",
+      "_blank",
+      "width=800,height=600,center=yes"
+    );
     if (!printWindow) {
-      toast.error('Print window could not be opened');
+      toast.error("Print window could not be opened");
       return;
     }
 
@@ -155,12 +171,12 @@ export default function OrderViewClient() {
         <body>
           <div class="header">
             <h1>Buyurtma #${order?.orderNumber}</h1>
-            <p>${new Date().toLocaleDateString('uz-UZ', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
+            <p>${new Date().toLocaleDateString("uz-UZ", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
             })}</p>
           </div>
 
@@ -168,7 +184,14 @@ export default function OrderViewClient() {
             <h2>Mijoz ma'lumotlari</h2>
             <p><strong>Ism:</strong> ${order?.customerInfo.name}</p>
             <p><strong>Telefon:</strong> ${order?.customerInfo.phone}</p>
-            ${order?.customerInfo.comment ? `<p><strong>Izoh:</strong> ${order.customerInfo.comment}</p>` : ''}
+            <p><strong>Manzil:</strong> ${order?.mapLocation.lat}, ${
+      order?.mapLocation.lng
+    }</p>
+            ${
+              order?.customerInfo.comment
+                ? `<p><strong>Izoh:</strong> ${order.customerInfo.comment}</p>`
+                : ""
+            }
           </div>
 
           <h2>Buyurtma tarkibi</h2>
@@ -183,7 +206,9 @@ export default function OrderViewClient() {
               </tr>
             </thead>
             <tbody>
-              ${order?.items.map((item, index) => `
+              ${order?.items
+                .map(
+                  (item, index) => `
                 <tr>
                   <td>${index + 1}</td>
                   <td>${item.name}</td>
@@ -191,18 +216,29 @@ export default function OrderViewClient() {
                   <td>${item.quantity}</td>
                   <td>${item.totalItemPrice.toLocaleString()} so'm</td>
                 </tr>
-              `).join('')}
+              `
+                )
+                .join("")}
             </tbody>
             <tfoot>
               <tr>
                 <td colspan="4" style="text-align: right;"><strong>Jami summa:</strong></td>
                 <td><strong>${order?.totalPrice.toLocaleString()} so'm</strong></td>
               </tr>
+              <br/>
+              <tr>
+                <td colspan="5" style="height: 60px; text-align: left; vertical-align: bottom;">
+                  <div style="margin-top: 30px;">
+                    <strong>Imzo:</strong>
+                    <span style="display: inline-block; border-bottom: 1px solid #111827; width: 200px; height: 24px; margin-left: 16px;"></span>
+                  </div>
+                </td>
+              </tr>
+
             </tfoot>
           </table>
 
           <div class="footer">
-            <p>Bu hujjat kompyuter tomonidan yaratilgan va imzo talab qilinmaydi</p>
             <p>Savol va murojatlar uchun: +998 91 296 11 11</p>
             <p>sotib olingan mahsulotlar olinmaydi</p>
           </div>
@@ -225,38 +261,38 @@ export default function OrderViewClient() {
 
   const handleDownloadPDF = async () => {
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
+      const html2pdf = (await import("html2pdf.js")).default;
       const element = contentRef.current;
       if (!element) {
-        throw new Error('Content element not found');
+        throw new Error("Content element not found");
       }
 
-      document.body.classList.add('print-mode');
+      document.body.classList.add("print-mode");
 
       const opt = {
         margin: [10, 10, 10, 10],
-        filename: `buyurtma-${order?.orderNumber || 'unknown'}.pdf`,
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { 
+        filename: `buyurtma-${order?.orderNumber || "unknown"}.pdf`,
+        image: { type: "jpeg", quality: 1 },
+        html2canvas: {
           scale: 2,
           useCORS: true,
           logging: true,
-          windowWidth: element.scrollWidth
+          windowWidth: element.scrollWidth,
         },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait'
-        }
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
       };
 
       await html2pdf().set(opt).from(element).save();
 
-      document.body.classList.remove('print-mode');
+      document.body.classList.remove("print-mode");
     } catch (error) {
-      console.error('PDF yaratishda xatolik:', error);
-      toast.error('PDF yaratishda xatolik yuz berdi');
-      document.body.classList.remove('print-mode');
+      console.error("PDF yaratishda xatolik:", error);
+      toast.error("PDF yaratishda xatolik yuz berdi");
+      document.body.classList.remove("print-mode");
     }
   };
 
@@ -266,33 +302,38 @@ export default function OrderViewClient() {
     try {
       const updatedItems = [...order.items];
       updatedItems.splice(index, 1);
-      
-      const newTotalPrice = updatedItems.reduce((sum, item) => sum + item.totalItemPrice, 0);
-      
+
+      const newTotalPrice = updatedItems.reduce(
+        (sum, item) => sum + item.totalItemPrice,
+        0
+      );
+
       await update(ref(database, `orders/${order.id}`), {
         items: updatedItems,
-        totalPrice: newTotalPrice
+        totalPrice: newTotalPrice,
       });
 
       setOrder({ ...order, items: updatedItems, totalPrice: newTotalPrice });
-      toast.success('Mahsulot o\'chirildi');
+      toast.success("Mahsulot o'chirildi");
     } catch (error) {
-      console.error('Error deleting item:', error);
-      toast.error('Mahsulotni o\'chirishda xatolik yuz berdi');
+      console.error("Error deleting item:", error);
+      toast.error("Mahsulotni o'chirishda xatolik yuz berdi");
     }
   };
 
   const handleAddItem = async () => {
     if (!order || !newItem.name || newItem.quantity <= 0) {
-      toast.error('Barcha maydonlarni to\'ldiring');
+      toast.error("Barcha maydonlarni to'ldiring");
       return;
     }
 
     try {
-      const selectedProduct = products.find(product => product.name === newItem.name);
-      
+      const selectedProduct = products.find(
+        (product) => product.name === newItem.name
+      );
+
       if (!selectedProduct) {
-        toast.error('Mahsulot topilmadi');
+        toast.error("Mahsulot topilmadi");
         return;
       }
 
@@ -300,23 +341,26 @@ export default function OrderViewClient() {
         name: selectedProduct.name,
         quantity: newItem.quantity,
         price: selectedProduct.price,
-        totalItemPrice: newItem.quantity * selectedProduct.price
+        totalItemPrice: newItem.quantity * selectedProduct.price,
       };
 
       const updatedItems = [...(order.items || []), newItemWithTotal];
-      const newTotalPrice = updatedItems.reduce((sum, item) => sum + item.totalItemPrice, 0);
+      const newTotalPrice = updatedItems.reduce(
+        (sum, item) => sum + item.totalItemPrice,
+        0
+      );
 
       await update(ref(database, `orders/${order.id}`), {
         items: updatedItems,
-        totalPrice: newTotalPrice
+        totalPrice: newTotalPrice,
       });
 
       setOrder({ ...order, items: updatedItems, totalPrice: newTotalPrice });
-      setNewItem({ name: '', quantity: 1, price: 0 });
-      toast.success('Yangi mahsulot qo\'shildi');
+      setNewItem({ name: "", quantity: 1, price: 0 });
+      toast.success("Yangi mahsulot qo'shildi");
     } catch (error) {
-      console.error('Error adding item:', error);
-      toast.error('Mahsulot qo\'shishda xatolik yuz berdi');
+      console.error("Error adding item:", error);
+      toast.error("Mahsulot qo'shishda xatolik yuz berdi");
     }
   };
 
@@ -324,7 +368,7 @@ export default function OrderViewClient() {
     setNewItem({
       name: product.name,
       quantity: 1,
-      price: product.price
+      price: product.price,
     });
     setShowProductModal(false);
   };
@@ -336,7 +380,9 @@ export default function OrderViewClient() {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-900">Mahsulot tanlang</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              Mahsulot tanlang
+            </h2>
             <button
               onClick={() => setShowProductModal(false)}
               className="text-gray-500 hover:text-gray-700"
@@ -363,7 +409,7 @@ export default function OrderViewClient() {
                     <div className="relative">
                       <div className="w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
                         <img
-                          src={product.image || '/placeholder.png'}
+                          src={product.image || "/placeholder.png"}
                           alt={product.name}
                           className="w-full h-full object-cover transition-opacity duration-300"
                           loading="lazy"
@@ -420,9 +466,7 @@ export default function OrderViewClient() {
   if (!order) {
     return (
       <div className="min-h-screen p-4 bg-gray-900">
-        <div className="text-center text-gray-400">
-          Buyurtma topilmadi
-        </div>
+        <div className="text-center text-gray-400">Buyurtma topilmadi</div>
       </div>
     );
   }
@@ -452,12 +496,12 @@ export default function OrderViewClient() {
                 Buyurtma #{order.orderNumber}
               </h1>
               <p className="text-[#4B5563]">
-                {new Date().toLocaleDateString('uz-UZ', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
+                {new Date().toLocaleDateString("uz-UZ", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
                 })}
               </p>
             </div>
@@ -468,16 +512,34 @@ export default function OrderViewClient() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="print:border print:border-[#E5E7EB] print:p-4 print:rounded">
-                  <p className="text-sm text-[#9CA3AF] print:text-[#4B5563] mb-1">Ism</p>
-                  <p className="font-medium text-white print:text-[#111827] text-lg">{order.customerInfo.name}</p>
-              
-                  <p className="text-sm text-[#9CA3AF] print:text-[#4B5563] mb-1">Telefon</p>
-                  <p className="font-medium text-white print:text-[#111827] text-lg">{order.customerInfo.phone}</p>
+                  <p className="text-sm text-[#9CA3AF] print:text-[#4B5563] mb-1">
+                    Ism
+                  </p>
+                  <p className="font-medium text-white print:text-[#111827] text-lg">
+                    {order.customerInfo.name}
+                  </p>
+
+                  <p className="text-sm text-[#9CA3AF] print:text-[#4B5563] mb-1">
+                    Telefon
+                  </p>
+                  <p className="font-medium text-white print:text-[#111827] text-lg">
+                    {order.customerInfo.phone}
+                  </p>
+                  <p className="text-sm text-[#9CA3AF] print:text-[#4B5563] mb-1">
+                    Manzil
+                  </p>
+                  <p className="font-medium text-white print:text-[#111827] text-lg">
+                    {order.mapLocation.lat}, {order.mapLocation.lng}
+                  </p>
                 </div>
                 {order.customerInfo.comment && (
                   <div className="md:col-span-2 print:border print:border-[#E5E7EB] print:p-4 print:rounded">
-                    <p className="text-sm text-[#9CA3AF] print:text-[#4B5563] mb-1">Izoh</p>
-                    <p className="font-medium text-white print:text-[#111827]">{order.customerInfo.comment}</p>
+                    <p className="text-sm text-[#9CA3AF] print:text-[#4B5563] mb-1">
+                      Izoh
+                    </p>
+                    <p className="font-medium text-white print:text-[#111827]">
+                      {order.customerInfo.comment}
+                    </p>
                   </div>
                 )}
               </div>
@@ -491,22 +553,47 @@ export default function OrderViewClient() {
                 <table className="w-full print:border-collapse">
                   <thead>
                     <tr className="border-b border-[#374151] print:border-[#E5E7EB] print:bg-gray-50">
-                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">#</th>
-                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">Mahsulot</th>
-                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">Narxi</th>
-                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">Soni</th>
-                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">Jami</th>
-                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:hidden">Amallar</th>
+                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">
+                        #
+                      </th>
+                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">
+                        Mahsulot
+                      </th>
+                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">
+                        Narxi
+                      </th>
+                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">
+                        Soni
+                      </th>
+                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:text-[#111827] print:font-bold">
+                        Jami
+                      </th>
+                      <th className="text-left py-3 px-4 text-[#9CA3AF] print:hidden">
+                        Amallar
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {order.items.map((item, index) => (
-                      <tr key={index} className="border-b border-[#374151] print:border-[#E5E7EB]">
-                        <td className="py-3 px-4 text-white print:text-[#111827]">{index + 1}</td>
-                        <td className="py-3 px-4 text-white print:text-[#111827]">{item.name}</td>
-                        <td className="py-3 px-4 text-white print:text-[#111827]">{item.price.toLocaleString()} so'm</td>
-                        <td className="py-3 px-4 text-white print:text-[#111827]">{item.quantity}</td>
-                        <td className="py-3 px-4 text-white print:text-[#111827]">{item.totalItemPrice.toLocaleString()} so'm</td>
+                      <tr
+                        key={index}
+                        className="border-b border-[#374151] print:border-[#E5E7EB]"
+                      >
+                        <td className="py-3 px-4 text-white print:text-[#111827]">
+                          {index + 1}
+                        </td>
+                        <td className="py-3 px-4 text-white print:text-[#111827]">
+                          {item.name}
+                        </td>
+                        <td className="py-3 px-4 text-white print:text-[#111827]">
+                          {item.price.toLocaleString()} so'm
+                        </td>
+                        <td className="py-3 px-4 text-white print:text-[#111827]">
+                          {item.quantity}
+                        </td>
+                        <td className="py-3 px-4 text-white print:text-[#111827]">
+                          {item.totalItemPrice.toLocaleString()} so'm
+                        </td>
                         <td className="py-3 px-4 print:hidden">
                           <button
                             onClick={() => handleDeleteItem(index)}
@@ -520,10 +607,16 @@ export default function OrderViewClient() {
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 border-[#374151] print:border-[#E5E7EB] print:bg-gray-50">
-                      <td colSpan={4} className="py-3 px-4 font-medium text-white print:text-[#111827] text-right">
+                      <td
+                        colSpan={4}
+                        className="py-3 px-4 font-medium text-white print:text-[#111827] text-right"
+                      >
                         Jami summa:
                       </td>
-                      <td colSpan={2} className="py-3 px-4 font-bold text-white print:text-[#111827]">
+                      <td
+                        colSpan={2}
+                        className="py-3 px-4 font-bold text-white print:text-[#111827]"
+                      >
                         {order.totalPrice.toLocaleString()} so'm
                       </td>
                     </tr>
@@ -533,9 +626,12 @@ export default function OrderViewClient() {
             </div>
 
             <div className="print:mt-8 print:pt-8 print:border-t print:border-[#E5E7EB] print:text-center print:text-[#4B5563]">
-              <p className="print:text-sm">Bu hujjat kompyuter tomonidan yaratilgan va imzo talab qilinmaydi</p>
-              <p className="print:text-sm print:mt-1">Savol va murojatlar uchun: +998 91 296 11 11</p>
-              <p className="print:text-sm print:mt-1">sotib olingan mahsulotlar olinmaydi</p>
+              <p className="print:text-sm print:mt-1">
+                Savol va murojatlar uchun: +998 91 296 11 11
+              </p>
+              <p className="print:text-sm print:mt-1">
+                Buyurtma berildan mahsulot qaytarib olinmaydi!!!
+              </p>
             </div>
           </div>
         </div>
@@ -568,12 +664,13 @@ export default function OrderViewClient() {
             width: 100% !important;
             border-collapse: collapse !important;
           }
-          th, td {
+          th,
+          td {
             padding: 8px !important;
-            border: 1px solid #E5E7EB !important;
+            border: 1px solid #e5e7eb !important;
           }
           th {
-            background-color: #F9FAFB !important;
+            background-color: #f9fafb !important;
             font-weight: bold !important;
           }
         }
@@ -584,4 +681,4 @@ export default function OrderViewClient() {
       <ProductSelectionModal />
     </div>
   );
-} 
+}

@@ -10,8 +10,8 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../utils/Firebase.config";
-import { useEffect, useState } from "react";
-import { FiEdit, FiTrash } from "react-icons/fi";
+import { useEffect, useState, useCallback } from "react";
+import { FiEdit, FiTrash, FiUpload, FiX } from "react-icons/fi";
 import { resizeImage } from "../utils/imgUtils";
 
 interface Product {
@@ -37,6 +37,9 @@ const ProductTable = () => {
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -47,6 +50,42 @@ const ProductTable = () => {
     like: false,
   });
 
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith("image/")) {
+          const compressedBase64 = await resizeImage(file);
+          setForm({ ...form, image: compressedBase64 });
+        }
+      }
+    },
+    [form]
+  );
+
   const fetchProducts = async () => {
     const querySnapshot = await getDocs(collection(db, "products"));
     const data: Product[] = [];
@@ -55,6 +94,21 @@ const ProductTable = () => {
       data.push({ id: doc.id, ...rest });
     });
     setProducts(data);
+  };
+
+  const handleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    for (const id of selectedIds) {
+      await deleteDoc(doc(db, "products", id));
+    }
+    setProducts((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
+    setSelectedIds([]);
   };
 
   const fetchCategories = async () => {
@@ -176,6 +230,25 @@ const ProductTable = () => {
         <table className="min-w-full border text-sm dark:border-gray-700">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
+              <th className="p-2 border dark:border-gray-700">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.length === products.length}
+                  onChange={() =>
+                    setSelectedIds(
+                      selectedIds.length === products.length
+                        ? []
+                        : products.map((p) => p.id)
+                    )
+                  }
+                />
+                <button
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded w-full md:w-auto"
+                  onClick={handleDeleteSelected}
+                >
+                  🗑 Delete Selected
+                </button>
+              </th>
               <th className="p-2 border dark:border-gray-700">№</th>
               <th className="p-2 border dark:border-gray-700">Name</th>
               <th className="p-2 border dark:border-gray-700">Category</th>
@@ -188,6 +261,14 @@ const ProductTable = () => {
           <tbody>
             {filtered.map((prod, index) => (
               <tr key={prod.id} className="border-b dark:border-gray-700">
+                <td className="p-2 border dark:border-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(prod.id)}
+                    onChange={() => handleSelect(prod.id)}
+                  />
+                </td>
+
                 <td className="p-2 border dark:border-gray-700">{index + 1}</td>
                 <td className="p-2 border dark:border-gray-700">{prod.name}</td>
                 <td className="p-2 border dark:border-gray-700">
@@ -250,22 +331,55 @@ const ProductTable = () => {
               <h2 className="text-lg font-semibold mb-4 dark:text-white text-center">
                 {editMode ? "Edit Product" : "Add Product"}
               </h2>
-              <div className="space-y-4 mt-4">
+              <div className="space-y-4 mt-4 h-150 overflow-y-auto">
                 <div>
                   <label className="block font-medium dark:text-gray-200 text-center">
                     Image
                   </label>
-                  <input
-                    type="file"
-                    className="border p-2 dark:bg-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onChange={handleFileUpload}
-                  />
-                  {form.image && (
-                    <img
-                      src={form.image}
-                      alt="Preview"
-                      className="mt-4 h-24 w-24 shadow-md"
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-6 text-center ${
+                      isDragging
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                  >
+                    <FiUpload className="mx-auto text-3xl mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Drag & drop an image here, or click to select
+                    </p>
+                    <input
+                      type="file"
+                      className="hidden"
+                      id="file-upload"
+                      onChange={handleFileUpload}
+                      accept="image/*"
                     />
+                    <label
+                      htmlFor="file-upload"
+                      className="mt-2 inline-block px-4 py-2 bg-blue-600 text-white rounded cursor-pointer"
+                    >
+                      Select Image
+                    </label>
+                  </div>
+                  {form.image && (
+                    <div className="mt-4 flex flex-col items-center">
+                      <img
+                        src={form.image}
+                        alt="Preview"
+                        className="h-24 w-24 object-cover rounded shadow-md"
+                      />
+                      <button
+                        type="button"
+                        className="mt-2 text-sm text-red-600 flex items-center gap-1"
+                        onClick={() => setForm({ ...form, image: "" })}
+                      >
+                        <FiX /> Remove Image
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div>
