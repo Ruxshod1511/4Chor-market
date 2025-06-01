@@ -12,6 +12,7 @@ import {
   FaBars,
 } from "react-icons/fa";
 import { LuLayoutDashboard } from "react-icons/lu";
+import { useRouter } from "next/navigation"; // Importing for prefetching
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: <LuLayoutDashboard /> },
@@ -25,7 +26,7 @@ const navItems = [
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [animateSidebar, setAnimateSidebar] = useState(false);
-
+  const router = useRouter();
   const toggleMobileMenu = () => {
     if (isMobileMenuOpen) {
       setAnimateSidebar(false);
@@ -66,15 +67,16 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               <ul>
                 {navItems.map((item) => (
                   <li key={item.href}>
-                    <Link
-                      prefetch
-                      href={item.href}
+                    <button
                       className="flex items-center py-3 px-4 mb-2 text-base font-medium rounded-lg hover:bg-blue-600 transition-all"
-                      onClick={toggleMobileMenu}
+                      onClick={() => {
+                        router.push(item.href);
+                        toggleMobileMenu;
+                      }}
                     >
                       <span className="mr-3 text-xl">{item.icon}</span>
                       {item.label}
-                    </Link>
+                    </button>
                   </li>
                 ))}
               </ul>

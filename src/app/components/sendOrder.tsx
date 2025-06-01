@@ -47,9 +47,12 @@ const SendOrder: React.FC<SendOrderProps> = ({
       toast.error("Telefon va ism majburiy!");
       return;
     }
+    if (!locationCoords) {
+      toast.error("Lokatsiya majburiy!");
+      return;
+    }
     setLoading(true);
 
-    // Buyurtma ma'lumotlari
     const orderData = {
       items: cartItems.map((item) => ({
         name: item.name,
@@ -64,9 +67,7 @@ const SendOrder: React.FC<SendOrderProps> = ({
           ? formData.phone
           : `+${formData.phone}`,
       },
-      mapLocation: locationCoords
-        ? { lat: locationCoords[0], lng: locationCoords[1] }
-        : null,
+      mapLocation: { lat: locationCoords[0], lng: locationCoords[1] },
       orderDate: new Date().toISOString(),
       status: "new",
     };
@@ -163,8 +164,9 @@ const SendOrder: React.FC<SendOrderProps> = ({
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <FiMapPin className="mr-2" />
-                Lokatsiya (ixtiyoriy)
+                Lokatsiya* (majburiy)
               </label>
+
               <button
                 type="button"
                 className="px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition"
