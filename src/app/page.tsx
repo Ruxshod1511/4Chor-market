@@ -13,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { Exit } from "./exitModal/page";
 import { Carousel1 } from "./components/carusel";
 import logo from "./ilb/4chor.png";
+import PortfolioBanner from "../app/components/reklama";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -707,6 +708,8 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         )}
+
+        <PortfolioBanner />
 
         <header className="bg-gradient-to-r from-blue-500 to-blue-700 shadow-lg sticky top-0 z-40">
           <div className="container mx-auto px-4 py-3 mb-5">
