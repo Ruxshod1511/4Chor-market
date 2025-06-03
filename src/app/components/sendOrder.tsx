@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { FiPhone, FiUser, FiMessageSquare, FiMapPin } from "react-icons/fi";
 import YandexMapModal from "./yandexMapModal";
+import { database } from "../admin/utils/Firebase.config"; // yoki config joyi qayerda bo'lsa
+import { ref, push } from "firebase/database";
 
 interface SendOrderProps {
   cartItems: {
@@ -73,18 +75,12 @@ const SendOrder: React.FC<SendOrderProps> = ({
     };
 
     try {
-      await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      });
+      // Bu yerda Firebase RTDB ga buyurtmani push qilamiz
+      await push(ref(database, "orders"), orderData);
       toast.success(
         "Buyurtmangiz yuborildi, tez orada siz bilan aloqaga chiqamiz!"
       );
       onSubmit();
-
       setLoading(false);
     } catch (err) {
       console.error("Buyurtma yuborishda xatolik:", err);

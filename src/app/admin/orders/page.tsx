@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { ref, onValue, update, get } from 'firebase/database';
-import { database } from '@/app/admin/utils/Firebase.config';
-import { FiEye } from 'react-icons/fi';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { collection, onSnapshot, doc, getDoc, updateDoc, getDocs } from 'firebase/firestore';
-import { db } from '@/app/admin/utils/Firebase.config';
+import React, { useEffect, useState } from "react";
+import { ref, onValue, update, get, remove } from "firebase/database";
+import { database } from "@/app/admin/utils/Firebase.config";
+import { FiEye } from "react-icons/fi";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { collection, doc, updateDoc, getDocs } from "firebase/firestore";
+import { db } from "@/app/admin/utils/Firebase.config";
 
 interface Order {
   id: string;
@@ -23,7 +23,7 @@ interface Order {
     totalItemPrice: number;
   }[];
   totalPrice: number;
-  status: 'new' | 'processing' | 'completed' | 'cancelled';
+  status: "new" | "processing" | "completed" | "cancelled";
   orderNumber: number;
   createdAt: number;
 }
@@ -38,122 +38,144 @@ const OrdersPage = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const formatDate = (timestamp: number) => {
-    if (!timestamp) return '';
+  const formatDate = (timestamp: number | undefined) => {
+    if (!timestamp) return "";
     return new Date(timestamp).toLocaleString();
   };
 
   useEffect(() => {
-    const ordersRef = ref(database, 'orders');
+    const ordersRef = ref(database, "orders");
 
-    const unsubscribe = onValue(ordersRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const ordersData: Order[] = [];
-        snapshot.forEach((childSnapshot) => {
-          const order = {
-            id: childSnapshot.key,
-            ...childSnapshot.val()
-          } as Order;
-          ordersData.push(order);
-        });
+    const unsubscribe = onValue(
+      ordersRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const ordersData: Order[] = [];
+          snapshot.forEach((childSnapshot) => {
+            const order = {
+              id: childSnapshot.key,
+              ...childSnapshot.val(),
+            } as Order;
+            ordersData.push(order);
+          });
 
-        ordersData.sort((a, b) => {
-          const dateA = a.createdAt || 0;
-          const dateB = b.createdAt || 0;
-          return dateB - dateA;
-        });
+          ordersData.sort((a, b) => {
+            const dateA = a.createdAt || 0;
+            const dateB = b.createdAt || 0;
+            return dateB - dateA;
+          });
 
-        setOrders(ordersData);
-      } else {
-        setOrders([]);
+          setOrders(ordersData);
+        } else {
+          setOrders([]);
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching orders:", error);
+        toast.error("Buyurtmalarni yuklashda xatolik yuz berdi");
+        setLoading(false);
       }
-      setLoading(false);
-    }, (error) => {
-      console.error('Error fetching orders:', error);
-      toast.error('Buyurtmalarni yuklashda xatolik yuz berdi');
-      setLoading(false);
-    });
+    );
 
     return () => unsubscribe();
   }, []);
 
-  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
+  async function handleDelete(id: string) {
+    await remove(ref(database, `orders/${id}`));
+  }
+
+  const handleStatusChange = async (
+    orderId: string,
+    newStatus: Order["status"]
+  ) => {
     try {
       const orderRef = ref(database, `orders/${orderId}`);
       await update(orderRef, {
-        status: newStatus
+        status: newStatus,
       });
-      
+
       // Agar status "completed" bo'lsa
-      if (newStatus === 'completed') {
+      if (newStatus === "completed") {
         // Buyurtmani olish
         const orderSnapshot = await get(orderRef);
         const orderData = orderSnapshot.val();
-        
+
         if (orderData && orderData.items) {
           for (const item of orderData.items) {
             try {
-              const productsSnapshot = await getDocs(collection(db, 'products'));
-              const product = productsSnapshot.docs.find(doc => doc.data().name === item.name);
-              
+              const productsSnapshot = await getDocs(
+                collection(db, "products")
+              );
+              const product = productsSnapshot.docs.find(
+                (doc) => doc.data().name === item.name
+              );
+
               if (product) {
                 const productData = product.data();
                 const currentAmount = productData.amount || 0;
                 const newAmount = Math.max(0, currentAmount - item.quantity);
-                
+
                 // Mahsulot miqdorini yangilash
-                await updateDoc(doc(db, 'products', product.id), {
-                  amount: newAmount
+                await updateDoc(doc(db, "products", product.id), {
+                  amount: newAmount,
                 });
-                
-                console.log(`${item.name} miqdori yangilandi: ${currentAmount} -> ${newAmount}`);
+
+                console.log(
+                  `${item.name} miqdori yangilandi: ${currentAmount} -> ${newAmount}`
+                );
               }
             } catch (error) {
-              console.error(`${item.name} miqdorini yangilashda xatolik:`, error);
-              toast.error(`${item.name} miqdorini yangilashda xatolik yuz berdi`);
+              console.error(
+                `${item.name} miqdorini yangilashda xatolik:`,
+                error
+              );
+              toast.error(
+                `${item.name} miqdorini yangilashda xatolik yuz berdi`
+              );
             }
           }
         }
       }
-      
-      toast.success('Buyurtma statusi muvaffaqiyatli o\'zgartirildi');
+
+      toast.success("Buyurtma statusi muvaffaqiyatli o'zgartirildi");
     } catch (error) {
-      console.error('Error updating order status:', error);
-      toast.error('Statusni o\'zgartirishda xatolik yuz berdi');
+      console.error("Error updating order status:", error);
+      toast.error("Statusni o'zgartirishda xatolik yuz berdi");
     }
   };
 
-  const getStatusColor = (status: Order['status']) => {
+  const getStatusColor = (status: Order["status"]) => {
     switch (status) {
-      case 'new':
-        return 'bg-blue-100 text-blue-800';
-      case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
+      case "new":
+        return "bg-blue-100 text-blue-800";
+      case "processing":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getStatusText = (status: Order['status']): string => {
+  const getStatusText = (status: Order["status"]): string => {
     switch (status) {
-      case 'new':
-        return 'Yangi';
-      case 'processing':
-        return 'Jarayonda';
-      case 'completed':
-        return 'Bajarildi';
-      case 'cancelled':
-        return 'Bekor qilindi';
+      case "new":
+        return "Yangi";
+      case "processing":
+        return "Jarayonda";
+      case "completed":
+        return "Bajarildi";
+      case "cancelled":
+        return "Bekor qilindi";
       default:
         return status;
     }
@@ -181,133 +203,99 @@ const OrdersPage = () => {
     <div className="min-h-screen p-4 md:p-6">
       <div className="max-w-full mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-800">Buyurtmalar</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+            Buyurtmalar
+          </h1>
         </div>
 
         <div className="rounded-lg shadow-md overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full divide-y divide-gray-200">
-              <thead>
+              <thead className="bg-gray-50">
                 <tr>
-                  {isMobile ? (
-                    <>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        №
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mijoz
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sana
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ko'rish
-                      </th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        №
-                      </th>
-                      <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mijoz
-                      </th>
-                      <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Telefon
-                      </th>
-                      <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="hidden md:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sana
-                      </th>
-                      <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ko'rish
-                      </th>
-                    </>
-                  )}
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    №
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Mijoz
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Telefon
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Sana
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ko'rish
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Action
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <tr key={order.id} className="bg-gray-50">
-                    {isMobile ? (
-                      <>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {order.id}
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {order.customerInfo.name}
-                          </div>
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(order.createdAt)}
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap">
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
-                            className={`text-sm rounded-full p-2 text-center px-2 py-1 font-semibold ${getStatusColor(order.status)}`}
-                          >
-                            <option value="new">Yangi</option>
-                            <option value="processing">Jarayonda</option>
-                            <option value="completed">Bajarildi</option>
-                            <option value="cancelled">Bekor qilindi</option>
-                          </select>
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => window.location.href = `/admin/orders/view?id=${order.id}`}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <FiEye size={18} />
-                          </button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {order.orderNumber}
-                        </td>
-                        <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {order.customerInfo.name}
-                          </div>
-                        </td>
-                        <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {order.customerInfo.phone}
-                          </div>
-                        </td>
-                        <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
-                            className={`text-sm rounded-full text-center px-2 md:px-3 py-1 font-semibold ${getStatusColor(order.status)}`}
-                          >
-                            <option value="new">Yangi</option>
-                            <option value="processing">Jarayonda</option>
-                            <option value="completed">Bajarildi</option>
-                            <option value="cancelled">Bekor qilindi</option>
-                          </select>
-                        </td>
-                        <td className="hidden md:table-cell px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(order.createdAt)}
-                        </td>
-                        <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => window.location.href = `/admin/orders/view?id=${order.id}`}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <FiEye size={18} />
-                          </button>
-                        </td>
-                      </>
-                    )}
+              <tbody className="divide-y divide-gray-100">
+                {orders.map((order, idx) => (
+                  <tr
+                    key={order.id}
+                    className="bg-white hover:bg-blue-50 transition"
+                  >
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {order.orderNumber || idx + 1}
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {order.customerInfo?.name || "Noma'lum"}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {order.customerInfo?.phone || "-"}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            order.id,
+                            e.target.value as Order["status"]
+                          )
+                        }
+                        className={`text-sm rounded-full px-3 py-1 font-semibold border focus:outline-none focus:ring-2 ${getStatusColor(
+                          order.status
+                        )}`}
+                      >
+                        <option value="new">Yangi</option>
+                        <option value="processing">Jarayonda</option>
+                        <option value="completed">Bajarildi</option>
+                        <option value="cancelled">Bekor qilindi</option>
+                      </select>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() =>
+                          (window.location.href = `/admin/orders/view?id=${order.id}`)
+                        }
+                        className="text-blue-600 hover:text-blue-900 p-2 rounded transition"
+                        title="Ko‘rish"
+                      >
+                        <FiEye size={18} />
+                      </button>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => handleDelete(order.id)}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -340,16 +328,26 @@ const OrdersPage = () => {
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium text-gray-800">Mijoz ma'lumotlari</h3>
-                  <p className="text-sm md:text-base">Ism: {selectedOrder.customerInfo.name}</p>
-                  <p className="text-sm md:text-base">Telefon: {selectedOrder.customerInfo.phone}</p>
+                  <h3 className="font-medium text-gray-800">
+                    Mijoz ma'lumotlari
+                  </h3>
+                  <p className="text-sm md:text-base">
+                    Ism: {selectedOrder.customerInfo.name}
+                  </p>
+                  <p className="text-sm md:text-base">
+                    Telefon: {selectedOrder.customerInfo.phone}
+                  </p>
                   {selectedOrder.customerInfo.comment && (
-                    <p className="text-sm md:text-base">Izoh: {selectedOrder.customerInfo.comment}</p>
+                    <p className="text-sm md:text-base">
+                      Izoh: {selectedOrder.customerInfo.comment}
+                    </p>
                   )}
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-800 mb-2">Buyurtma tarkibi</h3>
+                  <h3 className="font-medium text-gray-800 mb-2">
+                    Buyurtma tarkibi
+                  </h3>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead>
@@ -372,9 +370,13 @@ const OrdersPage = () => {
                         {selectedOrder.items.map((item, index) => (
                           <tr key={index}>
                             <td className="py-2 text-sm">{item.name}</td>
-                            <td className="py-2 text-sm">{item.price.toLocaleString()} so'm</td>
+                            <td className="py-2 text-sm">
+                              {item.price.toLocaleString()} so'm
+                            </td>
                             <td className="py-2 text-sm">{item.quantity}</td>
-                            <td className="py-2 text-sm">{item.totalItemPrice.toLocaleString()} so'm</td>
+                            <td className="py-2 text-sm">
+                              {item.totalItemPrice.toLocaleString()} so'm
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -396,7 +398,12 @@ const OrdersPage = () => {
                   <h3 className="font-medium text-gray-800 mb-2">Status</h3>
                   <select
                     value={selectedOrder.status}
-                    onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value as Order['status'])}
+                    onChange={(e) =>
+                      handleStatusChange(
+                        selectedOrder.id,
+                        e.target.value as Order["status"]
+                      )
+                    }
                     className={`w-full text-sm rounded-lg px-3 py-2 font-semibold ${getStatusColor(
                       selectedOrder.status
                     )}`}

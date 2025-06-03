@@ -64,11 +64,8 @@ export default function PortfolioPromoBanner() {
               rel="noopener noreferrer"
               className="text-sm sm:text-base md:text-lg underline hover:text-yellow-400 transition-colors font-medium whitespace-nowrap"
             >
-              Mening loyihalarim ko'rgazmasi{" "}
+              Sizgaham bunday sayt kerakmi?
             </a>
-          </span>
-          <span className="hidden sm:block text-xs text-blue-200">
-            Mening so'nggi ishimni va amaliy tadqiqotlarimni tekshiring
           </span>
         </div>
 
